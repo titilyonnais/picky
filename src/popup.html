@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Picky</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon32.png" alt="" width="20" height="20">
+    <h1>Picky</h1>
+    <nav role="tablist">
+      <button role="tab" data-tab="history">Historique</button>
+      <button role="tab" data-tab="page">Cette page</button>
+      <button role="tab" data-tab="settings">Réglages</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Historique -->
+    <section id="history" role="tabpanel" hidden>
+      <ul id="history-list"></ul>
+      <p id="history-empty" class="empty" hidden>
+        Aucun téléchargement pour l'instant.<br>
+        Fais un clic droit sur une image, ou <kbd>Alt</kbd> + clic.
+      </p>
+      <footer id="history-footer" hidden>
+        <button id="history-clear" class="link">Effacer l'historique</button>
+      </footer>
+    </section>
+
+    <!-- Images de la page -->
+    <section id="page" role="tabpanel" hidden>
+      <div class="toolbar">
+        <span id="page-count">Recherche des images…</span>
+        <label class="check" id="page-all-label" hidden>
+          <input type="checkbox" id="page-all"> Tout
+        </label>
+      </div>
+      <div id="page-grid"></div>
+      <p id="page-empty" class="empty" hidden></p>
+      <div class="action-bar" id="page-actions" hidden>
+        <select id="page-format" aria-label="Format">
+          <option value="png">PNG</option>
+          <option value="jpg">JPG</option>
+          <option value="webp">WebP</option>
+          <option value="original">Tel quel</option>
+        </select>
+        <button id="page-download" class="primary" disabled>Télécharger</button>
+      </div>
+      <p id="page-status" class="status" hidden></p>
+    </section>
+
+    <!-- Réglages -->
+    <section id="settings" role="tabpanel" hidden>
+      <div class="field">
+        <span class="label">Format préféré</span>
+        <div class="segmented" id="set-preferred">
+          <button data-value="png">PNG</button>
+          <button data-value="jpg">JPG</button>
+          <button data-value="webp">WebP</button>
+          <button data-value="original">Tel quel</button>
+        </div>
+        <span class="hint">Utilisé par <kbd>Alt</kbd> + clic et « Enregistrer sous… ».</span>
+      </div>
+
+      <div class="field">
+        <span class="label">Qualité JPG et WebP <output id="set-quality-value"></output></span>
+        <input type="range" id="set-quality" min="50" max="100" step="1">
+        <span class="hint">Plus bas = fichier plus léger. 92 % est un bon équilibre.</span>
+      </div>
+
+      <div class="field">
+        <label class="label" for="set-naming">Nom des fichiers</label>
+        <select id="set-naming">
+          <option value="original">Nom d'origine — photo.png</option>
+          <option value="date">Nom + date — photo 2026-10-07 18-54-03.png</option>
+          <option value="site">Site + date — instagram.com 2026-10-07 18-54-03.png</option>
+        </select>
+      </div>
+
+      <label class="toggle">
+        <input type="checkbox" id="set-saveAs">
+        <span>Toujours demander où enregistrer</span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="set-altClick">
+        <span><kbd>Alt</kbd> + clic sur une image pour la télécharger</span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="set-confirm">
+        <span>Message de confirmation après un téléchargement</span>
+      </label>
+    </section>
+  </main>
+
+  <template id="history-item">
+    <li class="item">
+      <img class="thumb" alt="">
+      <div class="info">
+        <div class="name"></div>
+        <div class="meta"></div>
+        <div class="meta sub"></div>
+      </div>
+      <div class="actions">
+        <button class="icon show" title="Afficher dans le dossier" aria-label="Afficher dans le dossier">
+          <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        </button>
+        <button class="icon again" title="Retélécharger dans un autre format" aria-label="Retélécharger dans un autre format">
+          <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4"/></svg>
+        </button>
+      </div>
+      <div class="formats" hidden>
+        <span>Retélécharger en</span>
+        <button data-format="png">PNG</button>
+        <button data-format="jpg">JPG</button>
+        <button data-format="webp">WebP</button>
+        <button data-format="original">Tel quel</button>
+      </div>
+    </li>
+  </template>
+
+  <script src="shared.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Picky",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Clic droit sur n'importe quelle image pour la télécharger en PNG, JPG, WebP ou dans son format d'origine.",
   "homepage_url": "https://github.com/titilyonnais/picky",
   "icons": {
@@ -10,8 +10,16 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "permissions": ["contextMenus", "downloads", "offscreen", "scripting"],
+  "permissions": ["contextMenus", "downloads", "offscreen", "scripting", "storage", "clipboardWrite"],
   "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_title": "Picky",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
   "background": {
     "service_worker": "background.js"
   },

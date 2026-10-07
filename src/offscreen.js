@@ -58,54 +58,106 @@ async function decode(blob, mime) {
       w = Math.round(w * scale);
       h = Math.round(h * scale);
     }
-    const canvas = new OffscreenCanvas(w, h);
-    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-    return canvas;
+    const out = canvas(w, h);
+    out.getContext('2d').drawImage(img, 0, 0, w, h);
+    return out;
   } finally {
     URL.revokeObjectURL(url);
   }
 }
 
-async function convert(blob, mime, format) {
-  let bitmap;
-  try {
-    bitmap = await decode(blob, mime);
-  } catch {
-    throw new Error("Ce fichier n'est pas une image lisible.");
-  }
-  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-  const ctx = canvas.getContext('2d');
+// Encodage synchrone avec toDataURL : convertToBlob est asynchrone et Chrome ralentit
+// les tâches des documents cachés (environ 1 s de perdue par image).
+function canvas(width, height) {
+  const el = document.createElement('canvas');
+  el.width = width;
+  el.height = height;
+  return el;
+}
+
+function dataUrlToBlob(dataUrl) {
+  const [head, base64] = dataUrl.split(',');
+  const bytes = Uint8Array.from(atob(base64), (ch) => ch.charCodeAt(0));
+  return new Blob([bytes], { type: head.slice(5, head.indexOf(';')) });
+}
+
+function draw(source, format) {
+  const out = canvas(source.width, source.height);
+  const ctx = out.getContext('2d');
   if (format === 'jpg') {
     // Le JPG ne gère pas la transparence : fond blanc plutôt que noir.
     ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, out.width, out.height);
   }
-  ctx.drawImage(bitmap, 0, 0);
-  bitmap.close?.();
-  return canvas.convertToBlob({ type: MIME[format], quality: 0.92 });
+  ctx.drawImage(source, 0, 0);
+  return out;
 }
 
-async function process(url, format) {
+// Petite miniature JPEG pour l'historique.
+function thumbnail(source) {
+  const scale = Math.min(1, 96 / Math.max(source.width, source.height));
+  const thumb = canvas(Math.max(1, Math.round(source.width * scale)), Math.max(1, Math.round(source.height * scale)));
+  const ctx = thumb.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, thumb.width, thumb.height);
+  ctx.drawImage(source, 0, 0, thumb.width, thumb.height);
+  return thumb.toDataURL('image/jpeg', 0.7);
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function process({ url, format, quality = 0.92 }) {
   const res = await fetch(url, { credentials: 'include' });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
+  if (!res.ok) throw new Error(`le site a refusé (erreur ${res.status}).`);
   const blob = await res.blob();
   const mime = await sniffMime(blob);
 
-  if (format === 'original') {
-    const ext = EXT_BY_MIME[mime];
-    if (!ext) throw new Error("Ce fichier n'est pas une image reconnue.");
-    return { blob, ext };
+  let source = null;
+  try {
+    source = await decode(blob, mime);
+  } catch {
+    if (format !== 'original') throw new Error("ce fichier n'est pas une image lisible.");
   }
-  return { blob: await convert(blob, mime, format), ext: format };
+
+  let out = blob;
+  let ext = format;
+  if (format === 'original') {
+    ext = EXT_BY_MIME[mime];
+    if (!ext) throw new Error("ce fichier n'est pas une image reconnue.");
+  } else {
+    out = dataUrlToBlob(draw(source, format).toDataURL(MIME[format], quality));
+  }
+
+  const info = { ext, size: out.size };
+  // Un SVG gardé tel quel n'a pas de taille en pixels.
+  if (source && !(format === 'original' && ext === 'svg')) {
+    info.width = source.width;
+    info.height = source.height;
+  }
+    if (source) {
+    try {
+      info.thumb = thumbnail(source);
+    } catch {}
+  }
+  source?.close?.();
+  return { blob: out, info };
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.target !== 'offscreen') return;
-  process(msg.url, msg.format).then(
-    ({ blob, ext }) => {
+  process(msg).then(
+    async ({ blob, info }) => {
+      if (msg.as === 'dataUrl') return sendResponse({ dataUrl: await blobToDataUrl(blob), info });
       const blobUrl = URL.createObjectURL(blob);
       setTimeout(() => URL.revokeObjectURL(blobUrl), 5 * 60 * 1000);
-      sendResponse({ blobUrl, ext });
+      sendResponse({ blobUrl, info });
     },
     (err) => sendResponse({ error: err.message || String(err) })
   );
