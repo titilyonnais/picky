@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Picky — page de test</title>
+<style>
+  body { margin: 0; }
+  div, img, canvas, svg { position: absolute; width: 200px; height: 150px; }
+</style>
+
+<!-- AVIF caché sous un calque transparent -->
+<img src="/photo.avif" style="left:0;top:0">
+<div style="left:0;top:0;z-index:5;background:transparent"></div>
+
+<!-- Image en fond CSS -->
+<div style="left:220px;top:0;background:url(/fond.webp) center/cover"></div>
+
+<!-- SVG inline -->
+<svg style="left:440px;top:0" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#09f"/></svg>
+
+<!-- Image en blob: -->
+<img id="blob" style="left:0;top:200px">
+
+<!-- Canvas -->
+<canvas id="canvas" width="200" height="150" style="left:220px;top:200px"></canvas>
+
+<!-- Image d'un autre domaine, sans en-têtes CORS -->
+<img src="{{CROSS_ORIGIN}}/cross.jpg" style="left:440px;top:200px">
+
+<!-- Image protégée par le Referer (anti-hotlink) -->
+<img src="/protege.png" style="left:0;top:400px">
+
+<script>
+  fetch('/blob-source.png')
+    .then((r) => r.blob())
+    .then((b) => (document.getElementById('blob').src = URL.createObjectURL(b)));
+  const ctx = document.getElementById('canvas').getContext('2d');
+  ctx.fillStyle = 'green';
+  ctx.fillRect(0, 0, 200, 150);
+</script>
