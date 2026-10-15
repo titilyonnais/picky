@@ -4,7 +4,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { startServers } from './server.mjs';
 
-const EXT = resolve(import.meta.dirname, '..', '..', 'src');
+// PICKY_EXT permet de tester le zip publié une fois décompressé.
+const EXT = resolve(process.env.PICKY_EXT ?? join(import.meta.dirname, '..', '..', 'src'));
 
 // Lit le format d'un fichier à ses premiers octets, et ses dimensions si c'est un PNG.
 function inspect(file) {

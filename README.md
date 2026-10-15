@@ -45,13 +45,18 @@ préféré.
 
 ## Installation
 
-1. Télécharge le code (**Code → Download ZIP**) et décompresse-le, ou clone le dépôt.
-2. Ouvre `brave://extensions` (ou `chrome://extensions`).
-3. Active le **Mode développeur** (en haut à droite).
-4. Clique sur **Charger l'extension non empaquetée** et choisis le dossier **`src`**.
+1. Va dans les [**Releases**](https://github.com/titilyonnais/picky/releases/latest) et
+   télécharge **`picky-vX.Y.Z.zip`** (dans « Assets »).
+2. Décompresse-le où tu veux le garder (clic droit → **Extraire tout**).
+3. Ouvre `brave://extensions` (ou `chrome://extensions`) et active le **Mode développeur**
+   (en haut à droite).
+4. Clique sur **Charger l'extension non empaquetée** et choisis le dossier décompressé.
 
-Pour mettre à jour : remplace les fichiers, puis clique sur ↻ sur la carte de Picky dans
-`brave://extensions`.
+Pour mettre à jour : décompresse la nouvelle version au même endroit, puis clique sur ↻ sur la
+carte de Picky dans `brave://extensions`.
+
+> Ne prends pas « Code → Download ZIP » : c'est le code source complet (tests, scripts…).
+> Si tu l'utilises quand même, c'est le dossier **`src`** qu'il faut charger.
 
 ## Développement
 
@@ -67,6 +72,14 @@ par le Referer), ainsi que la confirmation, l'historique, les réglages, Alt + c
 le popup.
 
 Les icônes se régénèrent avec `npm run icons` (Windows, PowerShell 7).
+
+### Publier une version
+
+1. Monte la version dans `package.json` **et** `src/manifest.json`, et ajoute sa section en
+   tête de `CHANGELOG.md` (`npm run release:check` vérifie les trois).
+2. Committe, puis pousse une étiquette : `git tag -a v1.2.0 -m "Picky 1.2.0" && git push --tags`.
+3. GitHub Actions lance les tests sur le zip, puis publie la Release avec
+   `picky-v1.2.0.zip` et les notes du CHANGELOG.
 
 ## Licence
 

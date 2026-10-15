@@ -1,0 +1,34 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Refuse de publier si les versions ne concordent pas ou si le CHANGELOG n'est pas à jour.
+      - run: npm run release:check
+      - run: node scripts/release-check.mjs --notes > release-notes.md
+      - run: npm run zip
+      # Les tests chargent le zip publié lui-même, une fois décompressé.
+      - name: E2E sur le zip (Chromium + extension)
+        run: |
+          npx playwright install --with-deps chromium
+          unzip -q release/picky-v*.zip -d "$RUNNER_TEMP/picky"
+          PICKY_EXT="$RUNNER_TEMP/picky" npm test
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release/*.zip
+          name: Picky ${{ github.ref_name }}
+          body_path: release-notes.md
